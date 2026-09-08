@@ -45,7 +45,7 @@ enum MHD_Result response_handler(
 
         if(strcmp(method,"GET")==0){
             const char *main_page = home_page();
-            const char *user_response_text = return_user("Bessn");
+            const char *user_response_text = return_user("Clara");
             
 
             if(strcmp(url, "/")==0){
@@ -55,7 +55,7 @@ enum MHD_Result response_handler(
                 return manage_response(user_response_text,connection,response);
             }
             else if(strcmp(url, "/login.html")==0){
-                authenticate_user("Bessn","123");
+                authenticate_user("Clara","123");
                 return manage_response(main_page,connection,response);
             }
             return MHD_NO;
@@ -65,7 +65,7 @@ enum MHD_Result response_handler(
 
             // first call for this request: set up state and wait for body data
             if(*req_cls == NULL){
-                printf("PHASE2",req_cls);
+                
                 con_info = malloc(sizeof(struct connection_info_struct));
                 if(con_info == NULL){
                     return MHD_NO;

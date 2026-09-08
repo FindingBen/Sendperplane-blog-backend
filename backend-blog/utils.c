@@ -11,13 +11,17 @@
 #define SALT_H 32
 #define ITER 100000
 
-static void to_hex(int src_l,char *src, char *dst_src){
+static void to_hex(int src_l,unsigned char *src, unsigned char *dst_src){
  char *h = "0123456789abcdef"; //hex characters
  for(int i = 0; i < src_l;++i){
     dst_src[i*2] = h[src[i] >> 4];
     dst_src[i*2+1] = h[src[i] & 0xF];
  }
  dst_src[src_l * 2] = '\0';
+
+}
+
+static void from_hex(char *hex_str, char *byte_str){
 
 }
 
@@ -72,6 +76,44 @@ const char *password_h(char *password){
 
 }
 //100000$28$21266238
+
+const char *password_verify(char *password){
+
+    unsigned char *hash = malloc(HASH_L);
+    size_t pass_len = strlen(password);
+
+    if(password == NULL){
+
+        return NULL;
+        
+    }
+    //get users new password, hash it
+    //use the exact salt and iteration count, salt needs to be returned from hex to bytes
+    //now we have users hashed password in bytes 
+    //return the users stored hash, convert to bytes.
+    //finally compare if they match
+}
+
+char *recompute_hash_to_bytes(char *hex_str){
+
+    unsigned char out[32];
+    unsigned char *bytes;
+
+    size_t hex_l = strlen(hex_str) / 2;
+
+    if(hex_l == SALT_L){
+        bytes = malloc(SALT_L);
+    }
+    if(hex_l == HASH_L){
+        bytes = malloc(SALT_L);
+    }
+    else{
+        return NULL;
+    }
+
+    from_hex(hex_l,bytes);
+
+}
 
 char *hash_parts(char *hash_password, int occurance){
     
