@@ -2,7 +2,7 @@
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include <string.h>
-
+#include "handler/utils.h"
 
 
 #define HASH_L 32
@@ -21,8 +21,31 @@ static void to_hex(int src_l,unsigned char *src, unsigned char *dst_src){
 
 }
 
-static void from_hex(char *hex_str, char *byte_str){
+static void from_hex(size_t hex_l,char *hex_str, char *byte_str){
+    
+    int r = hex_l % 2;
+    if(r == 0){
+        size_t byte_count = hex_l / 2;
+        for(size_t i = 0; i < byte_count; ++i){
+            char high = hex_str[i*2];
+            char low  = hex_str[i*2 + 1];
 
+            unsigned char high_val;
+            unsigned char low_val;
+
+            if(high >= '0' && high <= '9')      high_val = high - '0';
+            else if(high >= 'a' && high <= 'f') high_val = high - 'a' + 10;
+            else if(high >= 'A' && high <= 'F') high_val = high - 'A' + 10;
+            else return; // invalid hex character, bail out
+
+            if(low >= '0' && low <= '9')      low_val = low - '0';
+            else if(low >= 'a' && low <= 'f') low_val = low - 'a' + 10;
+            else if(low >= 'A' && low <= 'F') low_val = low - 'A' + 10;
+            else return; // invalid hex character, bail out
+
+            byte_str[i] = (high_val << 4) | low_val;
+        }
+    }
 }
 
 const char *password_h(char *password){
@@ -77,27 +100,41 @@ const char *password_h(char *password){
 }
 //100000$28$21266238
 
-const char *password_verify(char *password){
+int password_verify(char *password, char *input_password, int iteration,char *salt){
 
     unsigned char *hash = malloc(HASH_L);
-    size_t pass_len = strlen(password);
+    unsigned char *original_p = malloc(256);
+    unsigned char *original_s = malloc(SALT_L);
+    printf("SSSSS %s", salt);
+    size_t pass_len = strlen(input_password);
 
-    if(password == NULL){
+    if(input_password == NULL){
 
-        return NULL;
+        return 1;
         
     }
-    //get users new password, hash it
-    //use the exact salt and iteration count, salt needs to be returned from hex to bytes
-    //now we have users hashed password in bytes 
-    //return the users stored hash, convert to bytes.
-    //finally compare if they match
+    original_s = recompute_hash_to_bytes(salt);
+    original_p = recompute_hash_to_bytes(password);
+    printf("COMMMM %s", original_s);
+    int hash_result = PKCS5_PBKDF2_HMAC(input_password,pass_len,original_s,SALT_L,iteration, EVP_sha256(),HASH_L,hash);
+
+    if(hash_result != 1){
+        unsigned long err = ERR_get_error();
+        char errbuf[256];
+        ERR_error_string_n(err, errbuf, sizeof(errbuf));
+        fprintf(stderr, "PBKDF2 failed: %s\n", errbuf);
+    }
+
+    int result = CRYPTO_memcmp(hash, original_p, HASH_L);
+    
+    return result;
 }
 
-char *recompute_hash_to_bytes(char *hex_str){
+unsigned char *recompute_hash_to_bytes(char *hex_str){
 
     unsigned char out[32];
     unsigned char *bytes;
+    printf("HEX %s", hex_str);
 
     size_t hex_l = strlen(hex_str) / 2;
 
@@ -111,7 +148,9 @@ char *recompute_hash_to_bytes(char *hex_str){
         return NULL;
     }
 
-    from_hex(hex_l,bytes);
+    from_hex(hex_l,hex_str,bytes);
+    printf("BYTES %s",bytes);
+    return bytes;
 
 }
 

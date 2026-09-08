@@ -26,22 +26,13 @@ int authenticate_user(const char *username, char *user_password){
     
     char *salt = hash_parts(hashed_p,1);
     char *hash = hash_parts(hashed_p,2);
-
+    printf("HEREEE %s \n", salt);
     char *endptr;
     long val = strtol(iterator, &endptr, 10);
-
-    int auth_result = validate_pass(user_password, iterator, salt, hash);
+    printf("ITERR %d", val);
+    int auth_result = password_verify(hashed_p, user_password, val, salt);
 
     return auth_result;
 
-
-}
-
-
-int validate_pass(char *user_password, int iterator, char *salt_h, char *hash_h){
-
-    unsigned char *hashed_p = password_h(user_password);
-
-    unsigned char *user_hash = recompute_hash_to_bytes(hash_h);
 
 }

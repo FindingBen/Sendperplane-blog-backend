@@ -55,7 +55,8 @@ enum MHD_Result response_handler(
                 return manage_response(user_response_text,connection,response);
             }
             else if(strcmp(url, "/login.html")==0){
-                authenticate_user("Clara","123");
+                int res = authenticate_user("Clara","1213ssss123");
+                printf("RESU %d", res);
                 return manage_response(main_page,connection,response);
             }
             return MHD_NO;
