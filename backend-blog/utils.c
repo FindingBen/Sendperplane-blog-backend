@@ -20,30 +20,16 @@ static void to_hex(int src_l,unsigned char *src, unsigned char *dst_src){
  dst_src[src_l * 2] = '\0';
 
 }
-
+//26f70111920d0317ac8d0427eaf138cef4946b33d0ad3cb186f6a1ca801b0fc3B
+//7ad7027f1b29b8dae8a8a650ed6e9704
+//26f70111920d0317ac8d0427eaf138cef4946b33d0ad3cb186f6a1ca801b0fc3
 static void from_hex(size_t hex_l,char *hex_str, char *byte_str){
-    
+    printf("STRIG %s", hex_str);
     int r = hex_l % 2;
     if(r == 0){
         size_t byte_count = hex_l / 2;
         for(size_t i = 0; i < byte_count; ++i){
-            char high = hex_str[i*2];
-            char low  = hex_str[i*2 + 1];
-
-            unsigned char high_val;
-            unsigned char low_val;
-
-            if(high >= '0' && high <= '9')      high_val = high - '0';
-            else if(high >= 'a' && high <= 'f') high_val = high - 'a' + 10;
-            else if(high >= 'A' && high <= 'F') high_val = high - 'A' + 10;
-            else return; // invalid hex character, bail out
-
-            if(low >= '0' && low <= '9')      low_val = low - '0';
-            else if(low >= 'a' && low <= 'f') low_val = low - 'a' + 10;
-            else if(low >= 'A' && low <= 'F') low_val = low - 'A' + 10;
-            else return; // invalid hex character, bail out
-
-            byte_str[i] = (high_val << 4) | low_val;
+            
         }
     }
 }
@@ -105,14 +91,13 @@ int password_verify(char *password, char *input_password, int iteration,char *sa
     unsigned char *hash = malloc(HASH_L);
     unsigned char *original_p = malloc(256);
     unsigned char *original_s = malloc(SALT_L);
-    printf("SSSSS %s", salt);
+
     size_t pass_len = strlen(input_password);
 
     if(input_password == NULL){
-
         return 1;
-        
     }
+
     original_s = recompute_hash_to_bytes(salt);
     original_p = recompute_hash_to_bytes(password);
     printf("COMMMM %s", original_s);
@@ -134,22 +119,25 @@ unsigned char *recompute_hash_to_bytes(char *hex_str){
 
     unsigned char out[32];
     unsigned char *bytes;
-    printf("HEX %s", hex_str);
-
+    
+    printf("HEX_STR %s", hex_str);
     size_t hex_l = strlen(hex_str) / 2;
+
+    printf("SIZEE %zu", hex_l);
 
     if(hex_l == SALT_L){
         bytes = malloc(SALT_L);
     }
-    if(hex_l == HASH_L){
+    else if(hex_l == HASH_L){
         bytes = malloc(SALT_L);
     }
     else{
         return NULL;
     }
-
+    printf("HEXssss %s", hex_str);
     from_hex(hex_l,hex_str,bytes);
     printf("BYTES %s",bytes);
+    
     return bytes;
 
 }
