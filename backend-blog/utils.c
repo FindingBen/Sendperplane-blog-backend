@@ -3,6 +3,7 @@
 #include <openssl/err.h>
 #include <string.h>
 #include "handler/utils.h"
+#include <ctype.h>
 
 
 #define HASH_L 32
@@ -20,18 +21,32 @@ static void to_hex(int src_l,unsigned char *src, unsigned char *dst_src){
  dst_src[src_l * 2] = '\0';
 
 }
-//26f70111920d0317ac8d0427eaf138cef4946b33d0ad3cb186f6a1ca801b0fc3B
-//7ad7027f1b29b8dae8a8a650ed6e9704
-//26f70111920d0317ac8d0427eaf138cef4946b33d0ad3cb186f6a1ca801b0fc3
+
 static void from_hex(size_t hex_l,char *hex_str, char *byte_str){
-    printf("STRIG %s", hex_str);
-    int r = hex_l % 2;
-    if(r == 0){
-        size_t byte_count = hex_l / 2;
-        for(size_t i = 0; i < byte_count; ++i){
-            
+        if(strlen(hex_str) != hex_l*2){
+            printf("NOT EQUAL");
+            return;
         }
-    }
+
+        unsigned char high_nibble;
+        
+        unsigned char low_nibble;
+        for(size_t i = 0; i < hex_l; ++i){
+            char high = hex_str[i*2];
+            char low  = hex_str[i*2 + 1];
+
+            if(high >= '0' && high <= '9')      high_nibble = high - '0';
+            else if(high >= 'a' && high <= 'f') high_nibble = high - 'a' + 10;
+            else if(high >= 'A' && high <= 'F') high_nibble = high - 'A' + 10;
+            else { /* invalid — handle error */ }
+
+            if(low >= '0' && low <= '9')      low_nibble = low - '0';
+            else if(low >= 'a' && low <= 'f') low_nibble = low - 'a' + 10;
+            else if(low >= 'A' && low <= 'F') low_nibble = low - 'A' + 10;
+            else { /* invalid — handle error */ }
+
+            byte_str[i] = (high_nibble << 4) | low_nibble;
+        }
 }
 
 const char *password_h(char *password){
@@ -84,7 +99,6 @@ const char *password_h(char *password){
     return combined;
 
 }
-//100000$28$21266238
 
 int password_verify(char *password, char *input_password, int iteration,char *salt){
 
@@ -100,9 +114,14 @@ int password_verify(char *password, char *input_password, int iteration,char *sa
 
     original_s = recompute_hash_to_bytes(salt);
     original_p = recompute_hash_to_bytes(password);
-    printf("COMMMM %s", original_s);
+    if(original_s == NULL || original_p == NULL){
+    fprintf(stderr, "Failed to decode stored salt/hash — corrupt data?\n");
+        return 1;
+    }
+    
+    printf("\n");
     int hash_result = PKCS5_PBKDF2_HMAC(input_password,pass_len,original_s,SALT_L,iteration, EVP_sha256(),HASH_L,hash);
-
+    printf("HASH RESULT %d", hash_result);
     if(hash_result != 1){
         unsigned long err = ERR_get_error();
         char errbuf[256];
@@ -111,32 +130,35 @@ int password_verify(char *password, char *input_password, int iteration,char *sa
     }
 
     int result = CRYPTO_memcmp(hash, original_p, HASH_L);
-    
+    printf("FINAL RESULT %d", result);
     return result;
 }
 
 unsigned char *recompute_hash_to_bytes(char *hex_str){
 
-    unsigned char out[32];
     unsigned char *bytes;
     
-    printf("HEX_STR %s", hex_str);
     size_t hex_l = strlen(hex_str) / 2;
 
-    printf("SIZEE %zu", hex_l);
-
+    printf("SALT L %d",hex_l);
     if(hex_l == SALT_L){
+        printf("SALT");
         bytes = malloc(SALT_L);
     }
     else if(hex_l == HASH_L){
-        bytes = malloc(SALT_L);
+        bytes = malloc(HASH_L);
     }
     else{
+        printf("NULLLL — hex_l (%zu) matched neither SALT_L (%d) nor HASH_L (%d)\n", hex_l, SALT_L, HASH_L);
         return NULL;
     }
     printf("HEXssss %s", hex_str);
     from_hex(hex_l,hex_str,bytes);
-    printf("BYTES %s",bytes);
+    printf("BYTES: ");
+    for(size_t i = 0; i < hex_l; ++i){
+        printf("%02x ", bytes[i]);
+    }
+    printf("\n");
     
     return bytes;
 

@@ -26,10 +26,10 @@ int authenticate_user(const char *username, char *user_password){
     
     char *salt = hash_parts(hashed_p,1);
     char *hash = hash_parts(hashed_p,2);
-    printf("HEREEE %s \n", hash);
+
     char *endptr;
     long val = strtol(iterator, &endptr, 10);
-    printf("ITERR %d", val);
+
     int auth_result = password_verify(hash, user_password, val, salt);
 
     return auth_result;

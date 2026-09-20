@@ -9,20 +9,16 @@
 #include <windows.h>
 #include "handler/server.h"
 #include "handler/user_handler.h"
+#include "handler/main_handlers.h"
 #include "handler/http_types.h"
 #include "handler/db.h"
 #include "handler/utils.h"
 #include "handler/auth.h"
-
-struct connection_info_struct
-{
-    int connectiontype;
-    char *answerstring;
-    struct MHD_PostProcessor *postprocessor;
-};
+#include "handler/routes.h"
 
 #define MAXNAMESIZE 100
 #define POSTBUFFERSIZE 500
+#define MAX_BODY_SIZE (1024 * 1024)
 
 static void print_con_info(struct connection_info_struct *con_info){
     printf("con_info => connectiontype: %d, answerstring: %s, postprocessor: %p\n",
@@ -41,75 +37,48 @@ enum MHD_Result response_handler(
     size_t *upload_data_size,
     void **req_cls
 ){
-        struct MHD_Response *response;
+        struct connection_info_struct *con_info;
 
         if(strcmp(method,"GET")==0){
-            const char *main_page = home_page();
-            const char *user_response_text = return_user("Clara");
-            
+            struct MHD_Response *response = NULL;
 
-            if(strcmp(url, "/")==0){
-                return manage_response(main_page,connection,response);
+            con_info = calloc(1, sizeof(struct connection_info_struct));
+            if (con_info == NULL) {
+                return MHD_NO;
             }
-            else if(strcmp(url, "/users.html")==0){
-                return manage_response(user_response_text,connection,response);
-            }
-            else if(strcmp(url, "/login.html")==0){
-                int res = authenticate_user("Clara","1213ssss123");
-                printf("RESU %d", res);
-                return manage_response(main_page,connection,response);
-            }
-            return MHD_NO;
+
+            con_info->connection = connection;
+            con_info->response = response;
+            con_info->connectiontype = GET;
+
+            int dispatcher_response = dispatcher(method, url, con_info);
+            free(con_info);
+            return dispatcher_response;
         }
-        else if(strcmp(method,"POST")==0){
-            struct connection_info_struct *con_info;
 
-            // first call for this request: set up state and wait for body data
-            if(*req_cls == NULL){
-                
-                con_info = malloc(sizeof(struct connection_info_struct));
-                if(con_info == NULL){
-                    return MHD_NO;
+        if (strcmp(method, "POST") == 0) {
+            if (*req_cls == NULL) {
+                int result = parse_post_body(NULL, upload_data_size, upload_data, req_cls);
+                con_info = *req_cls;
+                if (con_info != NULL) {
+                    con_info->connection = connection;
+                    con_info->response = NULL;
                 }
-
-                con_info->answerstring = NULL;
-                con_info->postprocessor = NULL;
-                con_info->connectiontype = POST;
-
-                *req_cls = (void*) con_info;
-                return MHD_YES;
+                return result;
             }
 
             con_info = *req_cls;
-            
-            // still receiving the raw JSON body, buffer it
-            if(*upload_data_size != 0){
-                char *body = malloc(*upload_data_size + 1);
-                if(body == NULL){
-                    return MHD_NO;
-                }
 
-                memcpy(body, upload_data, *upload_data_size);
-                body[*upload_data_size] = '\0';
-
-                con_info->answerstring = body;
-
-                *upload_data_size = 0;
-                return MHD_YES;
+            if (*upload_data_size != 0) {
+                return parse_post_body(con_info, upload_data_size, upload_data, req_cls);
             }
 
-            // all body data received, respond
-            print_con_info(con_info);
-            const int request = handle_post_request(con_info->answerstring);
-            if(request == 1){
-                const char *error = "there has been error";
-                return manage_response(error, connection, response);
-            }
-            else{
-                const char *page = "Success!";
-                return manage_response(page, connection, response);
-            }
-            
+            int request = dispatcher(method, url, con_info);
+            const char *page = request == 0
+                ? "there has been error"
+                : "Success!";
+
+            return manage_response(page, connection, NULL);
         }
 
         return MHD_NO;
@@ -117,10 +86,10 @@ enum MHD_Result response_handler(
 
 const int manage_response(const char *page,struct MHD_Connection *connection, struct MHD_Response *response){
     int ret;
-
+    printf("PAGEE %s", page);
     response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_PERSISTENT);
+    // MHD_add_response_header(response, "Content-Type", "application/json");
     ret = MHD_queue_response(connection, MHD_HTTP_OK,response);
-
     MHD_destroy_response(response);
 
     return ret;
@@ -146,18 +115,62 @@ void request_completed(void *cls, struct MHD_Connection *connection, void **req_
     }
 }
 
-const int handle_post_request(char *answerstring){
 
-   char *username = extractValuesForJson(answerstring, "\"username\":");
-   char *email = extractValuesForJson(answerstring, "\"email\":");
-   char *password = extractValuesForJson(answerstring, "\"password_hash\":");
+int dispatcher(const char *method, const char *url, struct connection_info_struct *con_info){
+    
+    if (con_info == NULL) {
+        return MHD_NO;
+    }
 
-   const char *password_hash = password_h(password);
+    for(size_t i=0;i< NUM_ROUTES;++i){
+        if(strcmp(method, routes[i].method)==0 && strcmp(url, routes[i].path)==0){
+            return routes[i].handler(con_info);
+        }
+    }
 
-   int create_response = create_user(username, email, password_hash);
+    return MHD_YES;
 
-   return create_response;
+}
 
+int parse_post_body(struct connection_info_struct *con_info, size_t *upload_data_size, const char *upload_data, void **req_cls){
+
+    if(*req_cls == NULL){
+        con_info = calloc(1, sizeof(struct connection_info_struct));
+        if (con_info == NULL) {
+            return MHD_NO;
+        }
+
+        con_info->connectiontype = POST;
+        con_info->postprocessor = NULL;
+
+        *req_cls = (void*) con_info;
+        return MHD_YES;
+    }
+
+    if(*upload_data_size != 0){
+                size_t old_len = con_info->answerstring_len;
+                size_t new_len = old_len + *upload_data_size;
+                
+                if(new_len > MAX_BODY_SIZE){
+                    return MHD_NO;
+                }
+                
+                char *new_buf = realloc(con_info->answerstring, new_len + 1);
+                
+                if(new_buf == NULL){
+                    return MHD_NO;
+                }
+                con_info->answerstring = new_buf;
+
+                memcpy(con_info->answerstring + old_len, upload_data, *upload_data_size);
+                con_info->answerstring[new_len] = '\0';
+                con_info->answerstring_len = new_len;
+
+                *upload_data_size = 0;
+                return MHD_YES;
+            }
+
+    return MHD_YES;
 
 }
 
