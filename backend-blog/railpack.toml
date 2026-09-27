@@ -1,0 +1,5 @@
+[build.apt_packages]
+postgresql-client = {}
+libmicrohttpd-dev = {}
+libssl-dev = {}
+libcrypto++-dev = {}
