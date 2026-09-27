@@ -2,4 +2,3 @@
 postgresql-client = {}
 libmicrohttpd-dev = {}
 libssl-dev = {}
-libcrypto++-dev = {}
