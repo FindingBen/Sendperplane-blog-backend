@@ -35,7 +35,9 @@ int main(){
         return 1;
     }
 
-    getchar();
+    while(1) {
+    sleep(1);
+    }
 
     MHD_stop_daemon(deamon);
     return 0;
