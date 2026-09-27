@@ -15,8 +15,7 @@ char *formatResultAsJson(PGresult *result);
 
 char *extractValuesForJson(char *value, char *col);
 
-
-char *executeGetUserForAuth(const char *query, const char *const *param);
+char *executeGetUserForAuth(const char *query, const char *const *params);
 
 
 #endif

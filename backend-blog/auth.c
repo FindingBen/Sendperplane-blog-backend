@@ -34,5 +34,14 @@ int authenticate_user(const char *username, char *user_password){
 
     return auth_result;
 
+}
 
+char *authorize_user(const char *username){
+    if(username==NULL){
+        return 0;
+    }
+
+    char *user_data = return_user(username);
+
+    return user_data;
 }
