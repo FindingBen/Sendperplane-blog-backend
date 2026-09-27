@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(backend-blog C)
+project(Sendperplane-blog-backend C)
 
 set(CMAKE_C_STANDARD 11)
-add_executable(backend-blog
+add_executable(Sendperplane-blog-backend
     main.c
     server.c
     db.c
@@ -15,7 +15,7 @@ add_executable(backend-blog
     blog_handler.c
 )
 
-target_link_libraries(backend-blog
+target_link_libraries(Sendperplane-blog-backend
     microhttpd
     pq
     ssl
