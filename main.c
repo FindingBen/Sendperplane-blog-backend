@@ -5,7 +5,7 @@
 #include "handler/server.h"
 #include "handler/db.h"
 
-#define DEFAULT_PORT 8888
+#define DEFAULT_PORT 8080
 
 int main(){
 
