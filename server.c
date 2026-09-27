@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <microhttpd.h>
 #include "handler/server.h"
