@@ -9,7 +9,6 @@ void load_env(const char *path){
 
     FILE *file = fopen(path, "r");
     if(file == NULL){
-        fprintf(stderr, "Could not open env file: %s\n", path);
         return;
     }
 
