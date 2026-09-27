@@ -4,8 +4,6 @@
 #include <microhttpd.h>
 #include <stddef.h>
 
-#define PORT 8888
-
 struct connection_info_struct
 {
     int connectiontype;
