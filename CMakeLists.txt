@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 find_package(PostgreSQL REQUIRED)
 
-add_executable(Sendperplane-blog-backend
+add_executable(app
     main.c
     server.c
     db.c
