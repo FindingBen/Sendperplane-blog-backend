@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <microhttpd.h>
-#include <windows.h>
 #include "handler/server.h"
 #include "handler/user_handler.h"
 #include "handler/main_handlers.h"
