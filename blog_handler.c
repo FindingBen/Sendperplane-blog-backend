@@ -28,7 +28,7 @@ int create_blog(const char *title, const char *body, int user_id){
     const char *query = "INSERT INTO blogs (title, body, user_id) VALUES ($1, $2, $3)";
     
     char user_id_buffer[100];
-    itoa(user_id, user_id_buffer,10);
+    snprintf(user_id_buffer, sizeof(user_id_buffer), "%d", user_id);
     
     const char *params[3] = {title, body, user_id_buffer};
 

@@ -27,7 +27,7 @@ void load_env(const char *path){
         }
         strcpy(entry, line);
 
-        _putenv(entry);
+        putenv(entry);
     }
 
     fclose(file);

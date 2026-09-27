@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "handler/main_handlers.h"
 #include "handler/blog_handler.h"
 #include "handler/server.h"
