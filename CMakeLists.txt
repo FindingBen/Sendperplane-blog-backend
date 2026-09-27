@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-
 project(Sendperplane-blog-backend C)
 
 set(CMAKE_C_STANDARD 11)
+
+find_package(PostgreSQL REQUIRED)
+
 add_executable(Sendperplane-blog-backend
     main.c
     server.c
@@ -15,9 +17,11 @@ add_executable(Sendperplane-blog-backend
     blog_handler.c
 )
 
+target_include_directories(Sendperplane-blog-backend PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+
 target_link_libraries(Sendperplane-blog-backend
+    ${PostgreSQL_LIBRARIES}
     microhttpd
-    pq
     ssl
     crypto
 )
