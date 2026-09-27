@@ -9,7 +9,7 @@
 
 int main(){
 
-    // load_env(".env");
+    load_env(".env");
 
     const char *port_env = getenv("PORT");
     char *port_end = NULL;
