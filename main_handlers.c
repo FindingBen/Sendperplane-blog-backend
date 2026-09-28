@@ -6,6 +6,8 @@
 #include "handler/user_handler.h"
 #include "handler/db.h"
 #include "handler/utils.h"
+#include "handler/auth.h"
+#include "handler/session_handler.h"
 
 int handle_register(struct connection_info_struct *con_info){
 
@@ -18,6 +20,25 @@ int handle_register(struct connection_info_struct *con_info){
     int create_response = create_user(username, email, password_hash);
 
     return create_response;
+}
+
+int handle_login(struct connection_info_struct *con_info){
+
+    char *username = extractValuesForJson(con_info->answerstring, "\"username\":");
+    char *password = extractValuesForJson(con_info->answerstring, "\"password\":");
+
+    char *cookie;
+    int auth_response = authenticate_user(username, password);
+
+    if(auth_response == 1){
+        cookie = generate_cookie();
+        char *session_response = return_session(con_info,cookie,username);
+        
+        return 1;
+    }
+    else{
+        return 0;
+    }
 }
 
 int handle_return_user(struct connection_info_struct *con_info){

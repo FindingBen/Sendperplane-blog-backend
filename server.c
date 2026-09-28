@@ -49,8 +49,11 @@ enum MHD_Result response_handler(
             con_info->connection = connection;
             con_info->response = response;
             con_info->connectiontype = GET;
+            
 
             int dispatcher_response = dispatcher(method, url, con_info);
+            // MHD_add_response_header(response, MHD_HTTP_HEADER_SET_COOKIE,
+            //             con_info->set_cookie);
             free(con_info);
             return dispatcher_response;
         }
@@ -73,6 +76,9 @@ enum MHD_Result response_handler(
             }
 
             int request = dispatcher(method, url, con_info);
+            MHD_add_response_header(con_info->response, MHD_HTTP_HEADER_SET_COOKIE,
+                        con_info->set_cookie);
+            free(con_info);
             const char *page = request == 0
                 ? "there has been error"
                 : "Success!";

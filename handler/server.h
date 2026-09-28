@@ -12,6 +12,7 @@ struct connection_info_struct
     struct MHD_Connection *connection;
     struct MHD_Response *response;
     struct MHD_PostProcessor *postprocessor;
+    char *set_cookie;
 };
 
 enum MHD_Result response_handler(

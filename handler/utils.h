@@ -11,4 +11,6 @@ int password_verify(char *password, char *input_password, int iteration,char *sa
 
 unsigned char *recompute_hash_to_bytes(char *hex_str);
 
+char *token_h(char *token);
+
 #endif

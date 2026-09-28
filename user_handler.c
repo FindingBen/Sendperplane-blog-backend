@@ -26,7 +26,7 @@ int create_user(const char *username, const char *email, const char *password_ha
     const char *query = "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3);";
     const char *params[3] = {username, email, password_hash};
 
-    int create_user_response = executePostQueryToJson(query,params);
+    int create_user_response = executePostQueryToJson(query, 3, params);
 
     return create_user_response;
     

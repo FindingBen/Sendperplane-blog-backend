@@ -11,6 +11,7 @@
 
 const route_t routes[] = {
     { "POST",   "/register",     handle_register},
+    {"POST", "/login", handle_login},
     {"GET",     "/",     handle_main_page},
     {"GET", "/user", handle_return_user},
     {"GET", "/users", handle_return_users},

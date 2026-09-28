@@ -9,7 +9,7 @@ PGconn *initDatabase();
 
 char *executeGetQueryToJson(const char *query);
 
-int executePostQueryToJson(const char *query, const char *const *params);
+int executePostQueryToJson(const char *query, int param_count, const char *const *params);
 
 char *formatResultAsJson(PGresult *result);
 

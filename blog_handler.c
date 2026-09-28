@@ -32,7 +32,7 @@ int create_blog(const char *title, const char *body, int user_id){
     
     const char *params[3] = {title, body, user_id_buffer};
 
-    int create_blog_response = executePostQueryToJson(query, params);
+    int create_blog_response = executePostQueryToJson(query, 3, params);
 
     return create_blog_response;
 }
@@ -48,7 +48,7 @@ int update_blog(char *body, char *title, int body_id){
     snprintf(body_id_buffer, sizeof(body_id_buffer), "%d", body_id);
 
     const char *params[3] = {title, body, body_id_buffer};
-    int update_blog_response = executePostQueryToJson(query, params);
+    int update_blog_response = executePostQueryToJson(query, 3, params);
     return update_blog_response;
 
 

@@ -49,9 +49,39 @@ static void from_hex(size_t hex_l,char *hex_str, char *byte_str){
         }
 }
 
+char *token_h(char *token){
+    static const char hex_digits[] = "0123456789abcdef";
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int token_hash_length = 0;
+
+    if (token == NULL) {
+        return NULL;
+    }
+
+    const char *token_value = strchr(token, '=');
+    token_value = token_value == NULL ? token : token_value + 1;
+
+    if (EVP_Digest(token_value, strlen(token_value),
+                digest, &token_hash_length,
+                EVP_sha256(), NULL) != 1 ||
+        token_hash_length != 32) {
+        return NULL;
+    }
+
+    char *token_hash = malloc(65);
+    if (token_hash == NULL) {
+        return NULL;
+    }
+    for (size_t i = 0; i < token_hash_length; i++) {
+        token_hash[i * 2] = hex_digits[digest[i] >> 4];
+        token_hash[i * 2 + 1] = hex_digits[digest[i] & 0x0f];
+    }
+    token_hash[64] = '\0';
+    return token_hash;
+}
+
 const char *password_h(char *password){
     
-    unsigned char *hash = malloc(HASH_L);
     unsigned char *salt = malloc(SALT_L);
     unsigned char out[32];
 
@@ -142,7 +172,6 @@ unsigned char *recompute_hash_to_bytes(char *hex_str){
 
     printf("SALT L %d",hex_l);
     if(hex_l == SALT_L){
-        printf("SALT");
         bytes = malloc(SALT_L);
     }
     else if(hex_l == HASH_L){
@@ -152,13 +181,8 @@ unsigned char *recompute_hash_to_bytes(char *hex_str){
         printf("NULLLL — hex_l (%zu) matched neither SALT_L (%d) nor HASH_L (%d)\n", hex_l, SALT_L, HASH_L);
         return NULL;
     }
-    printf("HEXssss %s", hex_str);
+    printf("HEX STR \n %s", hex_str);
     from_hex(hex_l,hex_str,bytes);
-    printf("BYTES: ");
-    for(size_t i = 0; i < hex_l; ++i){
-        printf("%02x ", bytes[i]);
-    }
-    printf("\n");
     
     return bytes;
 
@@ -169,26 +193,32 @@ char *hash_parts(char *hash_password, int occurance){
     
     if(occurance==0){
         size_t size_iter = strcspn(hash_password,"$");
-        char *extracted_iterator = malloc(size_iter);
-        char *iterator = strncpy(extracted_iterator, hash_password, size_iter);
-        return iterator;
+        char *extracted_iterator = malloc(size_iter+1);
+        if (extracted_iterator == NULL) {
+            return NULL;
+        }
+        strncpy(extracted_iterator, hash_password, size_iter);
+        extracted_iterator[size_iter] = '\0';
+        return extracted_iterator;
     }
     else if(occurance==1){
         char *sal_val = strchr(hash_password, '$') + 1;
 
         size_t sal_size = strcspn(sal_val,"$");
-        char *extracted_sal = malloc(sal_size);
-        char *salt = strncpy(extracted_sal, sal_val,sal_size);
-        return salt;
+        char *extracted_sal = malloc(sal_size+1);
+        strncpy(extracted_sal, sal_val,sal_size);
+        extracted_sal[sal_size] ='\0';
+        return extracted_sal;
     }
     else if(occurance==2){
         char *sal_val = strchr(hash_password, '$') + 1;
         char *hash_val = strchr(sal_val,'$') + 1;
         size_t hash_size = strcspn(sal_val,"");
-        char *extracted_hash = malloc(hash_size);
-        char *hash = strncpy(extracted_hash, hash_val, hash_size);
-
-        return hash;
+        char *extracted_hash = malloc(hash_size+1);
+        strncpy(extracted_hash, hash_val, hash_size);
+        extracted_hash[hash_size] = '\0';
+        
+        return extracted_hash;
     }
 
 }

@@ -101,7 +101,11 @@ char *executeGetUserForAuth(const char *query, const char *const *params){
     return jsonResult;
 }
 
-int executePostQueryToJson(const char *query, const char *const *params){
+int executePostQueryToJson(const char *query, int param_count, const char *const *params){
+
+    if (query == NULL || param_count < 0 || (param_count > 0 && params == NULL)) {
+        return 0;
+    }
 
     PGconn *conn = initDatabase();
 
@@ -111,7 +115,7 @@ int executePostQueryToJson(const char *query, const char *const *params){
         return 0;
     }
 
-    PGresult *result = PQexecParams(conn, query, 3, NULL, params, NULL, NULL, 0);
+    PGresult *result = PQexecParams(conn, query, param_count, NULL, params, NULL, NULL, 0);
 
     if(PQresultStatus(result) != PGRES_COMMAND_OK){
         fprintf(stderr, "Insert failed: %s", PQerrorMessage(conn));
@@ -186,3 +190,8 @@ char *extractValuesForJson(char *value, char *col){
     return extracted_val;
 
 }
+
+// char *extractCookie(char *cookie){
+
+//     char *value = strcspn("KEY")
+// }
