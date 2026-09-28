@@ -52,8 +52,7 @@ enum MHD_Result response_handler(
             
 
             int dispatcher_response = dispatcher(method, url, con_info);
-            // MHD_add_response_header(response, MHD_HTTP_HEADER_SET_COOKIE,
-            //             con_info->set_cookie);
+
             free(con_info);
             return dispatcher_response;
         }
@@ -76,24 +75,31 @@ enum MHD_Result response_handler(
             }
 
             int request = dispatcher(method, url, con_info);
-            MHD_add_response_header(con_info->response, MHD_HTTP_HEADER_SET_COOKIE,
-                        con_info->set_cookie);
-            free(con_info);
+           
+            
             const char *page = request == 0
                 ? "there has been error"
                 : "Success!";
 
-            return manage_response(page, connection, NULL);
+            return manage_response(page, connection, NULL, con_info->set_cookie);
         }
 
         return MHD_NO;
 }
 
-const int manage_response(const char *page,struct MHD_Connection *connection, struct MHD_Response *response){
+const int manage_response(const char *page,struct MHD_Connection *connection, struct MHD_Response *response, char *cookie){
     int ret;
     printf("PAGEE %s", page);
     response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_PERSISTENT);
-    // MHD_add_response_header(response, "Content-Type", "application/json");
+    if (response == NULL) {
+        return MHD_NO;
+    }
+
+    if (cookie != NULL) {
+        MHD_add_response_header(response,
+                                MHD_HTTP_HEADER_SET_COOKIE,
+                                cookie);
+    }
     ret = MHD_queue_response(connection, MHD_HTTP_OK,response);
     MHD_destroy_response(response);
 

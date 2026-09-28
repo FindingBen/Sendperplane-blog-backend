@@ -61,8 +61,18 @@ int manage_session(struct connection_info_struct *con_info, char *token, int use
 }
 
 void set_header(struct connection_info_struct *con_info, char *token){
-    
-    con_info->set_cookie="KEY=<$token>; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400";
+    if (con_info == NULL || token == NULL) {
+        return;
+    }
+
+    const char *attributes = "; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400";
+    size_t cookie_size = strlen(token) + strlen(attributes) + 1;
+    con_info->set_cookie = malloc(cookie_size);
+    if (con_info->set_cookie == NULL) {
+        return;
+    }
+
+    snprintf(con_info->set_cookie, cookie_size, "%s%s", token, attributes);
 }
 
 int authorize_session_token(char *token){

@@ -47,7 +47,7 @@ int handle_return_user(struct connection_info_struct *con_info){
 
     char *user_response = return_user(username);
 
-    int response = manage_response(user_response, con_info->connection,con_info->response);
+    int response = manage_response(user_response, con_info->connection,con_info->response,con_info->set_cookie);
 
     return response;
 
@@ -57,7 +57,7 @@ int handle_return_users(struct connection_info_struct *con_info){
 
     char *user_response = return_users();
 
-    int response = manage_response(user_response, con_info->connection,con_info->response);
+    int response = manage_response(user_response, con_info->connection,con_info->response,con_info->set_cookie);
 
     return response;
 }
@@ -65,7 +65,7 @@ int handle_return_users(struct connection_info_struct *con_info){
 int handle_main_page(struct connection_info_struct *con_info){
     const char *home_page_response = home_page();
     
-    int response = manage_response(home_page_response, con_info->connection, con_info->response);
+    int response = manage_response(home_page_response, con_info->connection, con_info->response,con_info->set_cookie);
 
     return response;
 }
@@ -90,7 +90,7 @@ int handle_return_blogs(struct connection_info_struct *con_info){
 
     char *blogs_response = return_blogs();
 
-    int response = manage_response(blogs_response, con_info->connection,con_info->response);
+    int response = manage_response(blogs_response, con_info->connection,con_info->response,con_info->set_cookie);
 
     return response;
 

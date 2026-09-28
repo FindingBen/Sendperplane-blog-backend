@@ -29,7 +29,8 @@ enum MHD_Result response_handler(
 const int manage_response(
     const char *page,
     struct MHD_Connection *connection,
-    struct MHD_Response *response
+    struct MHD_Response *response,
+    char *cookie
 );
 
 void request_completed(
