@@ -11,6 +11,7 @@ add_executable(app
  auth.c
  routes.c
  main_handlers.c
+ session_handler.c
  blog_handler.c
 )
 target_include_directories(app PRIVATE ${PostgreSQL_INCLUDE_DIRS})
