@@ -41,6 +41,25 @@ int handle_login(struct connection_info_struct *con_info){
     }
 }
 
+int handle_logout(struct connection_info_struct *con_info){
+    char *token = con_info->set_cookie;
+
+    char *token_hash = token_h(token);
+    int logout = expire_user_session(token_hash);
+    if(logout==1){
+        char *page = "Logged out!";
+        int logout_response = manage_response(page,con_info->connection,con_info->response,NULL);
+        return logout_response;
+    }
+    else{
+    char *error = "There has been error";
+    int logout_response = manage_response(error,con_info->connection,con_info->response,NULL);
+    return logout_response;
+    }
+
+    
+}
+
 int handle_return_user(struct connection_info_struct *con_info){
 
     char *username = con_info->answerstring;
@@ -50,16 +69,24 @@ int handle_return_user(struct connection_info_struct *con_info){
     int response = manage_response(user_response, con_info->connection,con_info->response,con_info->set_cookie);
 
     return response;
-
 }
 
 int handle_return_users(struct connection_info_struct *con_info){
 
-    char *user_response = return_users();
+    int is_authenticated = authorize_session_token(con_info->set_cookie);
+    if(is_authenticated==0){
+        char *error = "User not authenticated";
+        int response = manage_response(error, con_info->connection,con_info->response,NULL);
+        return response;
+    }
+    else{
+        char *user_response = return_users();
 
-    int response = manage_response(user_response, con_info->connection,con_info->response,con_info->set_cookie);
+        int response = manage_response(user_response, con_info->connection,con_info->response,con_info->set_cookie);
 
-    return response;
+        return response;
+    }
+    
 }
 
 int handle_main_page(struct connection_info_struct *con_info){

@@ -40,7 +40,8 @@ enum MHD_Result response_handler(
 
         if(strcmp(method,"GET")==0){
             struct MHD_Response *response = NULL;
-
+            const char *token =
+            MHD_lookup_connection_value(connection, MHD_COOKIE_KIND, "KEY");
             con_info = calloc(1, sizeof(struct connection_info_struct));
             if (con_info == NULL) {
                 return MHD_NO;
@@ -49,7 +50,8 @@ enum MHD_Result response_handler(
             con_info->connection = connection;
             con_info->response = response;
             con_info->connectiontype = GET;
-            
+            con_info->set_cookie=token;
+        
 
             int dispatcher_response = dispatcher(method, url, con_info);
 
@@ -89,7 +91,7 @@ enum MHD_Result response_handler(
 
 const int manage_response(const char *page,struct MHD_Connection *connection, struct MHD_Response *response, char *cookie){
     int ret;
-    printf("PAGEE %s", page);
+
     response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_PERSISTENT);
     if (response == NULL) {
         return MHD_NO;

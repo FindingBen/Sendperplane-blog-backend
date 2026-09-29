@@ -29,6 +29,16 @@ char *return_user_session(char *token){
     return session_response;
 }
 
+int expire_user_session(char *token){
+    char *query = "DELETE FROM sessions WHERE token_hash = decode($1, 'hex');";
+    const char *params[1] = {token};
+
+    int expire_session_response = executePostQueryToJson(query,1,params);
+    
+
+    return expire_session_response;
+}
+
 int create_session_user(char *token_h, int user_id){
 
     const char *query =
@@ -80,11 +90,11 @@ int authorize_session_token(char *token){
     char *hash_user_token = token_h(token);
 
     char *valid_session = return_user_session(hash_user_token);
-    if(strlen(valid_session) > 0){
-        return 1;
-    }
-    else{
-        return 0;
-    }
+    int is_valid = valid_session != NULL &&
+                   strcmp(valid_session, "[]") != 0 &&
+                   strstr(valid_session, "\"user_id\":") != NULL;
+    free(hash_user_token);
+    free(valid_session);
+    return is_valid;
 
 }

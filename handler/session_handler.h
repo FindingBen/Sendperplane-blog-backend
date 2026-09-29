@@ -9,5 +9,6 @@ char *return_session(struct connection_info_struct *con_info,char *token, char *
 int authorize_session_token(char *token);
 char *return_user_session(char *token);
 void set_header(struct connection_info_struct *con_info, char *token);
+int expire_user_session(char *token);
 
 #endif
