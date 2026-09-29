@@ -98,18 +98,28 @@ int handle_main_page(struct connection_info_struct *con_info){
 }
 
 int handle_create_blog(struct connection_info_struct *con_info){
+    int is_authenticated = authorize_session_token(con_info->set_cookie);
+
+    if(is_authenticated==1){
+        char *blog_title = extractValuesForJson(con_info->answerstring, "\"title\":");
+
+        char *blog_body = extractValuesForJson(con_info->answerstring, "\"body\":");
+
+        char *user_id = extractValuesForJson(con_info->answerstring, "\"user_id\":");
+        
+        int user_int_id = atoi(user_id);
+
+        int create_blog_response = create_blog(blog_title, blog_body, user_int_id);
+
+        return create_blog_response;
+    }
+    else{
+        char *error = "Unauthenticated!";
+        int response = manage_response(error, con_info->connection, con_info->response,NULL);
+        return response;
+
+    }
     
-    char *blog_title = extractValuesForJson(con_info->answerstring, "\"title\":");
-
-    char *blog_body = extractValuesForJson(con_info->answerstring, "\"body\":");
-
-    char *user_id = extractValuesForJson(con_info->answerstring, "\"user_id\":");
-    
-    int user_int_id = atoi(user_id);
-
-    int create_blog_response = create_blog(blog_title, blog_body, user_int_id);
-
-    return create_blog_response;
 
 }
 
