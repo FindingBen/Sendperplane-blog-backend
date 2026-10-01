@@ -26,6 +26,41 @@ static void print_con_info(struct connection_info_struct *con_info){
         (void*)con_info->postprocessor);
 }
 
+static int add_cors_headers(struct MHD_Response *response, struct MHD_Connection *connection){
+    const char *allowed_origin = getenv("CORS_ORIGIN");
+    const char *request_origin = MHD_lookup_connection_value(
+        connection, MHD_HEADER_KIND, "Origin");
+
+    if (allowed_origin == NULL || request_origin == NULL ||
+        strcmp(allowed_origin, request_origin) != 0) {
+        return 0;
+    }
+
+    MHD_add_response_header(response, "Access-Control-Allow-Origin", allowed_origin);
+    MHD_add_response_header(response, "Access-Control-Allow-Credentials", "true");
+    MHD_add_response_header(response, "Vary", "Origin");
+    return 1;
+}
+
+static enum MHD_Result handle_preflight(struct MHD_Connection *connection){
+    struct MHD_Response *response = MHD_create_response_from_buffer(
+        0, "", MHD_RESPMEM_PERSISTENT);
+    if (response == NULL) {
+        return MHD_NO;
+    }
+
+    if (add_cors_headers(response, connection)) {
+        MHD_add_response_header(response, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        MHD_add_response_header(response, "Access-Control-Allow-Headers", "Content-Type");
+        MHD_add_response_header(response, "Access-Control-Max-Age", "86400");
+    }
+
+    enum MHD_Result result = MHD_queue_response(
+        connection, MHD_HTTP_NO_CONTENT, response);
+    MHD_destroy_response(response);
+    return result;
+}
+
 enum MHD_Result response_handler(
     void *cls,
     struct MHD_Connection *connection,
@@ -37,6 +72,10 @@ enum MHD_Result response_handler(
     void **req_cls
 ){
         struct connection_info_struct *con_info;
+
+    if (strcmp(method, "OPTIONS") == 0) {
+        return handle_preflight(connection);
+    }
 
         if(strcmp(method,"GET")==0){
             struct MHD_Response *response = NULL;
@@ -96,6 +135,8 @@ const int manage_response(const char *page,struct MHD_Connection *connection, st
     if (response == NULL) {
         return MHD_NO;
     }
+
+    add_cors_headers(response, connection);
 
     if (cookie != NULL) {
         MHD_add_response_header(response,

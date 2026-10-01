@@ -146,6 +146,7 @@ char *formatResultAsJson(PGresult *result){
         return json;
     }
 
+    strcat(json, "[");
     for(int i = 0; i < numOfRows;++i){ //[{"col":"val"
         strcat(json,"{");
         for(int j = 0;j<numOfCols;++j){
@@ -164,6 +165,7 @@ char *formatResultAsJson(PGresult *result){
         strcat(json,"}");
         if(i < numOfRows -1 ) strcat(json,",");
     }
+    strcat(json, "]");
 
     return json;
 }
