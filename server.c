@@ -135,8 +135,15 @@ int dispatcher(const char *method, const char *url, struct connection_info_struc
         return MHD_NO;
     }
 
+    const char *query_string = strchr(url, '?');
+    size_t url_path_length = query_string == NULL
+        ? strlen(url)
+        : (size_t)(query_string - url);
+
     for(size_t i=0;i< NUM_ROUTES;++i){
-        if(strcmp(method, routes[i].method)==0 && strcmp(url, routes[i].path)==0){
+        if(strcmp(method, routes[i].method)==0 &&
+           strlen(routes[i].path) == url_path_length &&
+           strncmp(url, routes[i].path, url_path_length)==0){
             return routes[i].handler(con_info);
         }
     }

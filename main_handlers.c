@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "handler/main_handlers.h"
 #include "handler/blog_handler.h"
 #include "handler/server.h"
@@ -131,6 +132,28 @@ int handle_return_blogs(struct connection_info_struct *con_info){
 
     return response;
 
+}
+
+int handle_return_blog(struct connection_info_struct *con_info){
+
+    const char *blog_id_value = MHD_lookup_connection_value(
+        con_info->connection,
+        MHD_GET_ARGUMENT_KIND,
+        "id");
+    if (blog_id_value == NULL) {
+        return manage_response("Missing blog id", con_info->connection, con_info->response, NULL);
+    }
+
+    char *end = NULL;
+    long blog_id = strtol(blog_id_value, &end, 10);
+    if (end == blog_id_value || *end != '\0' || blog_id <= 0 || blog_id > INT_MAX) {
+        return manage_response("Invalid blog id", con_info->connection, con_info->response, NULL);
+    }
+
+    const char *blog_response = return_blog((int)blog_id);
+    int response = manage_response(blog_response, con_info->connection, con_info->response, con_info->set_cookie);
+
+    return response;
 }
 
 int handle_update_blog(struct connection_info_struct *con_info){

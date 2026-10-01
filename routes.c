@@ -19,6 +19,7 @@ const route_t routes[] = {
     { "POST", "/create_blog",  handle_create_blog  },
     { "POST", "/update_blog",  handle_update_blog  },
     { "GET", "/blogs",  handle_return_blogs  },
+    { "GET", "/blog",  handle_return_blog  },
 
 };
 
