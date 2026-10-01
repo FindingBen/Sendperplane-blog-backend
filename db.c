@@ -26,6 +26,20 @@ void load_env(const char *path){
         }
         strcpy(entry, line);
 
+        char *separator = strchr(entry, '=');
+        if (separator == NULL) {
+            free(entry);
+            continue;
+        }
+
+        *separator = '\0';
+        int already_set = getenv(entry) != NULL;
+        *separator = '=';
+        if (already_set) {
+            free(entry);
+            continue;
+        }
+
         putenv(entry);
     }
 
