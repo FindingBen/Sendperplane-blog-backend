@@ -151,7 +151,7 @@ int password_verify(char *password, char *input_password, int iteration,char *sa
     
     printf("\n");
     int hash_result = PKCS5_PBKDF2_HMAC(input_password,pass_len,original_s,SALT_L,iteration, EVP_sha256(),HASH_L,hash);
-    printf("HASH RESULT %d", hash_result);
+    
     if(hash_result != 1){
         unsigned long err = ERR_get_error();
         char errbuf[256];
@@ -160,7 +160,7 @@ int password_verify(char *password, char *input_password, int iteration,char *sa
     }
 
     int result = CRYPTO_memcmp(hash, original_p, HASH_L);
-    printf("FINAL RESULT %d", result);
+   
     return result;
 }
 
@@ -170,7 +170,7 @@ unsigned char *recompute_hash_to_bytes(char *hex_str){
     
     size_t hex_l = strlen(hex_str) / 2;
 
-    printf("SALT L %d",hex_l);
+
     if(hex_l == SALT_L){
         bytes = malloc(SALT_L);
     }
@@ -181,7 +181,7 @@ unsigned char *recompute_hash_to_bytes(char *hex_str){
         printf("NULLLL — hex_l (%zu) matched neither SALT_L (%d) nor HASH_L (%d)\n", hex_l, SALT_L, HASH_L);
         return NULL;
     }
-    printf("HEX STR \n %s", hex_str);
+    
     from_hex(hex_l,hex_str,bytes);
     
     return bytes;

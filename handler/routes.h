@@ -1,9 +1,11 @@
 #ifndef ROUTES_H
 #define ROUTES_H
 
+#include "http_types.h"
+
 struct connection_info_struct;
 
-typedef int (*route_handler_fn)(struct connection_info_struct *con_info);
+typedef HTTP_response (*route_handler_fn)(struct connection_info_struct *con_info);
 typedef struct {
     const char *method;
     const char *path;

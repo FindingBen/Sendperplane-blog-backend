@@ -89,13 +89,14 @@ enum MHD_Result response_handler(
             con_info->connection = connection;
             con_info->response = response;
             con_info->connectiontype = GET;
-            con_info->set_cookie=token;
+            con_info->cookie = (char *)token;
         
 
-            int dispatcher_response = dispatcher(method, url, con_info);
+            HTTP_response app_response = dispatcher(method, url, con_info);
 
+            enum MHD_Result result = manage_response(app_response, connection, con_info->set_cookie);
             free(con_info);
-            return dispatcher_response;
+            return result;
         }
 
         if (strcmp(method, "POST") == 0) {
@@ -105,6 +106,8 @@ enum MHD_Result response_handler(
                 if (con_info != NULL) {
                     con_info->connection = connection;
                     con_info->response = NULL;
+                    con_info->cookie = (char *)MHD_lookup_connection_value(
+                        connection, MHD_COOKIE_KIND, "KEY");
                 }
                 return result;
             }
@@ -115,23 +118,18 @@ enum MHD_Result response_handler(
                 return parse_post_body(con_info, upload_data_size, upload_data, req_cls);
             }
 
-            int request = dispatcher(method, url, con_info);
-           
-            
-            const char *page = request == 0
-                ? "there has been error"
-                : "Success!";
-
-            return manage_response(page, connection, NULL, con_info->set_cookie);
+            HTTP_response app_response = dispatcher(method, url, con_info);
+            return manage_response(app_response, connection, con_info->set_cookie);
         }
 
         return MHD_NO;
 }
 
-const int manage_response(const char *page,struct MHD_Connection *connection, struct MHD_Response *response, char *cookie){
-    int ret;
+enum MHD_Result manage_response(HTTP_response app_response, struct MHD_Connection *connection, char *cookie){
+    struct MHD_Response *response;
 
-    response = MHD_create_response_from_buffer(strlen(page), (void *)page, MHD_RESPMEM_PERSISTENT);
+    response = MHD_create_response_from_buffer(
+        strlen(app_response.body), (void *)app_response.body, MHD_RESPMEM_PERSISTENT);
     if (response == NULL) {
         return MHD_NO;
     }
@@ -143,7 +141,8 @@ const int manage_response(const char *page,struct MHD_Connection *connection, st
                                 MHD_HTTP_HEADER_SET_COOKIE,
                                 cookie);
     }
-    ret = MHD_queue_response(connection, MHD_HTTP_OK,response);
+    enum MHD_Result ret = MHD_queue_response(
+        connection, (unsigned int)app_response.status, response);
     MHD_destroy_response(response);
 
     return ret;
@@ -170,10 +169,10 @@ void request_completed(void *cls, struct MHD_Connection *connection, void **req_
 }
 
 
-int dispatcher(const char *method, const char *url, struct connection_info_struct *con_info){
+HTTP_response dispatcher(const char *method, const char *url, struct connection_info_struct *con_info){
     
     if (con_info == NULL) {
-        return MHD_NO;
+        return (HTTP_response){"{\"error\":\"Internal server error\"}", INTERNAL_SERVER_ERROR};
     }
 
     const char *query_string = strchr(url, '?');
@@ -189,7 +188,7 @@ int dispatcher(const char *method, const char *url, struct connection_info_struc
         }
     }
 
-    return MHD_YES;
+    return (HTTP_response){"{\"error\":\"Route not found\"}", NOT_FOUND};
 
 }
 

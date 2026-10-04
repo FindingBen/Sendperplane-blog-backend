@@ -3,6 +3,7 @@
 
 #include <microhttpd.h>
 #include <stddef.h>
+#include "http_types.h"
 
 struct connection_info_struct
 {
@@ -12,6 +13,7 @@ struct connection_info_struct
     struct MHD_Connection *connection;
     struct MHD_Response *response;
     struct MHD_PostProcessor *postprocessor;
+    char *cookie;
     char *set_cookie;
 };
 
@@ -26,10 +28,9 @@ enum MHD_Result response_handler(
     void **req_cls
 );
 
-const int manage_response(
-    const char *page,
+enum MHD_Result manage_response(
+    HTTP_response app_response,
     struct MHD_Connection *connection,
-    struct MHD_Response *response,
     char *cookie
 );
 
@@ -40,7 +41,7 @@ void request_completed(
     enum MHD_RequestTerminationCode toe
 );
 
-int dispatcher(const char *method, const char *url, struct connection_info_struct *con_info);
+HTTP_response dispatcher(const char *method, const char *url, struct connection_info_struct *con_info);
 
 int parse_post_body(struct connection_info_struct *con_info, size_t *upload_data_size, const char *upload_data, void **req_cls);
 
