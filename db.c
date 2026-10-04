@@ -150,7 +150,17 @@ char *formatResultAsJson(PGresult *result){
     int numOfRows = PQntuples(result);
     int numOfCols = PQnfields(result);
 
-    int totalSize = numOfRows * (2 + numOfCols * 256) + numOfRows -1 + 3;
+    size_t totalSize = 4;
+    for (int row = 0; row < numOfRows; row++) {
+        totalSize += 2 + (numOfCols > 0 ? (size_t)(numOfCols - 1) : 0);
+        for (int column = 0; column < numOfCols; column++) {
+            totalSize += strlen(PQfname(result, column))
+                + (size_t)PQgetlength(result, row, column) + 5;
+        }
+    }
+    if (numOfRows > 0) {
+        totalSize += (size_t)(numOfRows - 1);
+    }
 
     char *json = (char *)malloc(totalSize); // allocated memory for json repsonse
     json[0] = '\0';
