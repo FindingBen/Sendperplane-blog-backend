@@ -23,10 +23,21 @@ int authenticate_user(const char *username, char *user_password){
     char *hashed_p = extractValuesForJson(user_data, "\"password_hash\":");
 
 
+    if(hashed_p == NULL){
+        free(user_data);
+        return 0;
+    }
+
     char *iterator = hash_parts(hashed_p,0);
-    
     char *salt = hash_parts(hashed_p,1);
     char *hash = hash_parts(hashed_p,2);
+
+    if(iterator == NULL || salt == NULL || hash == NULL){
+        free(iterator);
+        free(salt);
+        free(hash);
+        return 0;
+    }
 
     char *endptr;
     long val = strtol(iterator, &endptr, 10);

@@ -189,8 +189,20 @@ unsigned char *recompute_hash_to_bytes(char *hex_str){
 }
 
 char *hash_parts(char *hash_password, int occurance){
-    
-    
+
+    if (hash_password == NULL) {
+        return NULL;
+    }
+    if (occurance >= 1) {
+        char *first = strchr(hash_password, '$');
+        if (first == NULL) {
+            return NULL;
+        }
+        if (occurance == 2 && strchr(first + 1, '$') == NULL) {
+            return NULL;
+        }
+    }
+
     if(occurance==0){
         size_t size_iter = strcspn(hash_password,"$");
         char *extracted_iterator = malloc(size_iter+1);
@@ -221,4 +233,5 @@ char *hash_parts(char *hash_password, int occurance){
         return extracted_hash;
     }
 
+    return NULL;
 }
