@@ -36,7 +36,7 @@ int main(){
     }
 
     while(1) {
-    sleep(1);
+    Sleep(1);
     }
 
     MHD_stop_daemon(deamon);
