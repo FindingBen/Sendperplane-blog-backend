@@ -27,20 +27,53 @@ static void print_con_info(struct connection_info_struct *con_info){
 }
 
 static int add_cors_headers(struct MHD_Response *response, struct MHD_Connection *connection){
-    const char *allowed_origin = getenv("CORS_ORIGIN");
+    const char *allowed_origins = getenv("CORS_ORIGIN");
     const char *request_origin = MHD_lookup_connection_value(
         connection, MHD_HEADER_KIND, "Origin");
 
-    if (allowed_origin == NULL || request_origin == NULL ||
-        strcmp(allowed_origin, request_origin) != 0) {
+    if (allowed_origins == NULL || request_origin == NULL) {
         return 0;
     }
 
-    MHD_add_response_header(response, "Access-Control-Allow-Origin", allowed_origin);
-    MHD_add_response_header(response, "Access-Control-Allow-Credentials", "true");
-    MHD_add_response_header(response, "Vary", "Origin");
-    return 1;
+    size_t request_origin_length = strlen(request_origin);
+    const char *origin = allowed_origins;
+    while (*origin != '\0') {
+        const char *origin_end = strchr(origin, ',');
+        if (origin_end == NULL) {
+            origin_end = origin + strlen(origin);
+        }
+
+        const char *trimmed_origin = origin;
+        const char *trimmed_end = origin_end;
+        while (trimmed_origin < trimmed_end &&
+               (*trimmed_origin == ' ' || *trimmed_origin == '\t' ||
+                *trimmed_origin == '\r' || *trimmed_origin == '\n')) {
+            trimmed_origin++;
+        }
+        while (trimmed_end > trimmed_origin &&
+               (trimmed_end[-1] == ' ' || trimmed_end[-1] == '\t' ||
+                trimmed_end[-1] == '\r' || trimmed_end[-1] == '\n')) {
+            trimmed_end--;
+        }
+
+        if ((size_t)(trimmed_end - trimmed_origin) == request_origin_length &&
+            strncmp(trimmed_origin, request_origin, request_origin_length) == 0) {
+            MHD_add_response_header(
+                response, "Access-Control-Allow-Origin", request_origin);
+            MHD_add_response_header(response, "Access-Control-Allow-Credentials", "true");
+            MHD_add_response_header(response, "Vary", "Origin");
+            return 1;
+        }
+
+        if (*origin_end == '\0') {
+            break;
+        }
+        origin = origin_end + 1;
+    }
+
+    return 0;
 }
+
 
 static enum MHD_Result handle_preflight(struct MHD_Connection *connection){
     struct MHD_Response *response = MHD_create_response_from_buffer(
